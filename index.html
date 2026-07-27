@@ -1,0 +1,428 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Generador de Patente en Espejo</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Poppins:ital,wght@0,400;0,700;1,400;1,700&family=Roboto+Condensed:ital,wght@0,400;0,700;1,400;1,700&display=swap" rel="stylesheet">
+    
+    <style>
+        :root {
+            --bg-color: #0f172a;
+            --card-bg: #1e293b;
+            --accent-color: #10b981;
+            --bluetooth-color: #3b82f6;
+            --text-color: #f8fafc;
+            --input-bg: #334155;
+            --border-color: #475569;
+        }
+
+        * {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+        }
+
+        body {
+            font-family: 'Poppins', sans-serif;
+            background-color: var(--bg-color);
+            color: var(--text-color);
+            min-height: 100vh;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            padding: 20px;
+        }
+
+        .container {
+            width: 100%;
+            max-width: 480px;
+            background-color: var(--card-bg);
+            padding: 24px;
+            border-radius: 16px;
+            box-shadow: 0 10px 25px rgba(0,0,0,0.5);
+            display: flex;
+            flex-direction: column;
+            gap: 18px;
+        }
+
+        h2 {
+            text-align: center;
+            font-size: 1.4rem;
+            color: var(--accent-color);
+            letter-spacing: 0.5px;
+        }
+
+        .form-group {
+            display: flex;
+            flex-direction: column;
+            gap: 6px;
+        }
+
+        label {
+            font-size: 0.85rem;
+            color: #cbd5e1;
+            font-weight: 500;
+        }
+
+        input[type="text"], select {
+            width: 100%;
+            padding: 12px;
+            border-radius: 8px;
+            border: 1px solid var(--border-color);
+            background-color: var(--input-bg);
+            color: #fff;
+            font-size: 1rem;
+            outline: none;
+            transition: border-color 0.2s;
+        }
+
+        input[type="text"]:focus, select:focus {
+            border-color: var(--accent-color);
+        }
+
+        input[type="text"] {
+            text-transform: uppercase;
+            font-weight: bold;
+            letter-spacing: 2px;
+        }
+
+        .controls-grid {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 12px;
+        }
+
+        .preview-wrapper {
+            background-color: #e2e8f0;
+            border-radius: 12px;
+            padding: 16px;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            overflow-x: auto;
+            min-height: 160px;
+            box-shadow: inset 0 2px 4px rgba(0,0,0,0.1);
+        }
+
+        .canvas-container {
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            transition: width 0.2s ease, height 0.2s ease;
+        }
+
+        canvas {
+            width: 100%;
+            height: 100%;
+            border-radius: 6px;
+            box-shadow: 0 4px 6px -1px rgba(0,0,0,0.15);
+            background-color: #ffffff;
+        }
+
+        .size-info {
+            font-size: 0.8rem;
+            color: #94a3b8;
+            text-align: center;
+            margin-top: -8px;
+        }
+
+        .action-buttons {
+            display: flex;
+            flex-direction: column;
+            gap: 10px;
+            margin-top: 6px;
+        }
+
+        .btn {
+            border: none;
+            padding: 14px;
+            border-radius: 8px;
+            font-weight: 700;
+            font-size: 1rem;
+            cursor: pointer;
+            transition: background-color 0.2s, transform 0.1s;
+            text-align: center;
+            color: #ffffff;
+        }
+
+        .btn-download {
+            background-color: var(--accent-color);
+        }
+
+        .btn-download:hover {
+            background-color: #059669;
+        }
+
+        .btn-bluetooth {
+            background-color: var(--bluetooth-color);
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            gap: 8px;
+        }
+
+        .btn-bluetooth:hover {
+            background-color: #2563eb;
+        }
+
+        .btn:active {
+            transform: scale(0.98);
+        }
+
+        .status-msg {
+            font-size: 0.85rem;
+            text-align: center;
+            color: #38bdf8;
+            min-height: 20px;
+        }
+    </style>
+</head>
+<body>
+
+<div class="container">
+    <h2>Generador de Patente Espejo</h2>
+
+    <!-- Entrada de Texto -->
+    <div class="form-group">
+        <label for="patenteInput">Ingrese la Patente:</label>
+        <input type="text" id="patenteInput" value="FHVG49" maxlength="10" placeholder="Ej: FHVG49">
+    </div>
+
+    <!-- Previsualización -->
+    <div class="preview-wrapper">
+        <div id="canvasBox" class="canvas-container">
+            <canvas id="patenteCanvas"></canvas>
+        </div>
+    </div>
+    <div id="sizeInfo" class="size-info">Tamaño actual de previsualización: 10 cm</div>
+
+    <!-- Opciones de Estilo y Fuentes -->
+    <div class="controls-grid">
+        <div class="form-group">
+            <label for="estiloSelect">Estilos:</label>
+            <select id="estiloSelect">
+                <option value="normal">Normal</option>
+                <option value="bold" selected>Negritas</option>
+            </select>
+        </div>
+
+        <div class="form-group">
+            <label for="fuenteSelect">Fuentes:</label>
+            <select id="fuenteSelect">
+                <option value="'Roboto Condensed', sans-serif">Roboto Condensed</option>
+                <option value="monospace">Monospace</option>
+                <option value="sans-serif">FE-FONT</option>
+                <option value="serif">Serif</option>
+                <option value="Arial, sans-serif">Arial</option>
+                <option value="'Times New Roman', serif">Times</option>
+                <option value="'Poppins', sans-serif">Poppins</option>
+            </select>
+        </div>
+    </div>
+
+    <!-- Tamaño en CM -->
+    <div class="form-group">
+        <label for="tamanoSelect">Tamaño de la Imagen (Largo):</label>
+        <select id="tamanoSelect">
+            <option value="5">5 cm</option>
+            <option value="6">6 cm</option>
+            <option value="7">7 cm</option>
+            <option value="8">8 cm</option>
+            <option value="9">9 cm</option>
+            <option value="10" selected>10 cm</option>
+            <option value="11">11 cm</option>
+            <option value="12">12 cm</option>
+        </select>
+    </div>
+
+    <div class="action-buttons">
+        <button class="btn btn-download" onclick="descargarImagen()">Descargar Patente</button>
+        <button class="btn btn-bluetooth" onclick="imprimirBluetooth()">
+            🖨️ Imprimir por Bluetooth
+        </button>
+    </div>
+
+    <div id="statusMsg" class="status-msg"></div>
+</div>
+
+<script>
+    const canvas = document.getElementById('patenteCanvas');
+    const canvasBox = document.getElementById('canvasBox');
+    const ctx = canvas.getContext('2d');
+
+    const patenteInput = document.getElementById('patenteInput');
+    const estiloSelect = document.getElementById('estiloSelect');
+    const fuenteSelect = document.getElementById('fuenteSelect');
+    const tamanoSelect = document.getElementById('tamanoSelect');
+    const sizeInfo = document.getElementById('sizeInfo');
+    const statusMsg = document.getElementById('statusMsg');
+
+    function renderPatente() {
+        const texto = patenteInput.value.toUpperCase() || " ";
+        const estilo = estiloSelect.value;
+        const fuente = fuenteSelect.value;
+        const cm = parseFloat(tamanoSelect.value);
+
+        sizeInfo.textContent = `Ancho de impresión exacto: ${cm} cm`;
+
+        const displayPxPerCm = 24; 
+        const displayWidth = cm * displayPxPerCm;
+        const displayHeight = displayWidth * 0.35;
+
+        canvasBox.style.width = `${displayWidth}px`;
+        canvasBox.style.height = `${displayHeight}px`;
+
+        const printDpiScale = 118.11;
+        const canvasWidth = Math.round(cm * printDpiScale);
+        const canvasHeight = Math.round(canvasWidth * 0.35);
+
+        canvas.width = canvasWidth;
+        canvas.height = canvasHeight;
+
+        ctx.fillStyle = "#FFFFFF";
+        ctx.fillRect(0, 0, canvas.width, canvas.height);
+
+        ctx.save();
+        ctx.translate(canvas.width, 0);
+        ctx.scale(-1, 1);
+
+        const fontSize = Math.round(canvasHeight * 0.65);
+        ctx.font = `${estilo} ${fontSize}px ${fuente}`;
+        ctx.fillStyle = "#000000";
+        ctx.textAlign = "center";
+        ctx.textBaseline = "middle";
+
+        ctx.fillText(texto, canvas.width / 2, canvas.height / 2);
+        ctx.restore();
+    }
+
+    patenteInput.addEventListener('input', renderPatente);
+    estiloSelect.addEventListener('change', renderPatente);
+    fuenteSelect.addEventListener('change', renderPatente);
+    tamanoSelect.addEventListener('change', renderPatente);
+
+    document.fonts.ready.then(renderPatente);
+
+    function descargarImagen() {
+        const link = document.createElement('a');
+        link.download = `patente_espejo_${tamanoSelect.value}cm_${patenteInput.value || 'patente'}.png`;
+        link.href = canvas.toDataURL('image/png');
+        link.click();
+    }
+
+    // --- INTEGRACIÓN WEB BLUETOOTH API (ESC/POS) ---
+    async function imprimirBluetooth() {
+        if (!navigator.bluetooth) {
+            statusMsg.textContent = "Tu navegador no soporta Web Bluetooth. Usa Chrome o Edge.";
+            return;
+        }
+
+        try {
+            statusMsg.textContent = "Buscando impresora Bluetooth...";
+            
+            // Solicitar dispositivo Bluetooth con perfil Serial Port / Impresoras térmicas
+            const device = await navigator.bluetooth.requestDevice({
+                acceptAllDevices: true,
+                optionalServices: ['00001101-0000-1000-8000-00805f9b34fb', '49535343-fe7d-4358-8cd4-b25a36721002']
+            });
+
+            statusMsg.textContent = `Conectando a ${device.name || 'Impresora'}...`;
+            const server = await device.gatt.connect();
+            
+            // Buscar servicio serie / transferencia de datos
+            const services = await server.getPrimaryServices();
+            if (services.length === 0) {
+                throw new Error("No se encontraron servicios válidos en la impresora.");
+            }
+
+            let writeCharacteristic = null;
+            for (const service of services) {
+                const characteristics = await service.getCharacteristics();
+                for (const c of characteristics) {
+                    if (c.properties.write || c.properties.writeWithoutResponse) {
+                        writeCharacteristic = c;
+                        break;
+                    }
+                }
+                if (writeCharacteristic) break;
+            }
+
+            if (!writeCharacteristic) {
+                throw new Error("No se pudo establecer canal de escritura con la impresora.");
+            }
+
+            statusMsg.textContent = "Enviando imagen a la impresora...";
+
+            // Convertir Canvas a datos de mapa de bits ESC/POS
+            const escposData = canvasToESCPOS(canvas);
+            
+            // Enviar datos en paquetes para no saturar el buffer Bluetooth
+            const chunkSize = 128;
+            for (let i = 0; i < escposData.length; i += chunkSize) {
+                const chunk = escposData.slice(i, i + chunkSize);
+                await writeCharacteristic.writeValue(chunk);
+            }
+
+            statusMsg.textContent = "¡Impresión enviada con éxito!";
+            setTimeout(() => { statusMsg.textContent = ""; }, 4000);
+
+        } catch (error) {
+            console.error(error);
+            statusMsg.textContent = `Error: ${error.message || 'No se pudo conectar a la impresora'}`;
+        }
+    }
+
+    // Función para convertir el Canvas en comandos ráster ESC/POS (GS v 0)
+    function canvasToESCPOS(canvas) {
+        const width = canvas.width;
+        const height = canvas.height;
+        const imgData = ctx.getImageData(0, 0, width, height).data;
+        
+        const widthBytes = Math.ceil(width / 8);
+        const buffer = [];
+
+        // Inicializar impresora ESC @
+        buffer.push(0x1B, 0x40);
+
+        // Alineación centrada ESC a 1
+        buffer.push(0x1B, 0x61, 0x01);
+
+        // Comando raster bit image: GS v 0 m xL xH yL yH
+        buffer.push(0x1D, 0x76, 0x30, 0x00);
+        buffer.push(widthBytes & 0xFF, (widthBytes >> 8) & 0xFF);
+        buffer.push(height & 0xFF, (height >> 8) & 0xFF);
+
+        for (let y = 0; y < height; y++) {
+            for (let x = 0; x < widthBytes; x++) {
+                let byte = 0;
+                for (let bit = 0; bit < 8; bit++) {
+                    const pxX = x * 8 + bit;
+                    if (pxX < width) {
+                        const idx = (y * width + pxX) * 4;
+                        const r = imgData[idx];
+                        const g = imgData[idx + 1];
+                        const b = imgData[idx + 2];
+                        // Convertir a blanco y negro por umbral
+                        const luminance = (r * 0.299 + g * 0.587 + b * 0.114);
+                        if (luminance < 128) {
+                            byte |= (0x80 >> bit); // Píxel negro
+                        }
+                    }
+                }
+                buffer.push(byte);
+            }
+        }
+
+        // Avanzar papel y cortar
+        buffer.push(0x1B, 0x64, 0x03); // Avanzar 3 líneas
+
+        return new Uint8Array(buffer);
+    }
+</script>
+
+</body>
+</html>
+
